@@ -36,25 +36,40 @@ export const Stats = () => {
 
   const fetchStats = async () => {
     try {
-      // Fetch all word stats with profiles and words
+      // Fetch all word stats
       const { data: stats, error: statsError } = await supabase
         .from("word_stats")
-        .select(`
-          *,
-          profiles:user_id (name),
-          words:word_id (english, hebrew)
-        `);
+        .select("*");
 
       if (statsError) throw statsError;
 
-      if (stats) {
+      // Fetch all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*");
+
+      if (profilesError) throw profilesError;
+
+      // Fetch all words
+      const { data: words, error: wordsError } = await supabase
+        .from("words")
+        .select("*");
+
+      if (wordsError) throw wordsError;
+
+      if (stats && profiles && words) {
+        // Create lookup maps
+        const profileMap = new Map(profiles.map(p => [p.id, p.name]));
+        const wordMap = new Map(words.map(w => [w.id, { english: w.english, hebrew: w.hebrew }]));
+
         // Aggregate by user
         const userMap = new Map<string, UserStats>();
         const wordStatsList: WordStat[] = [];
 
-        stats.forEach((stat: any) => {
+        stats.forEach((stat) => {
           const userId = stat.user_id;
-          const userName = stat.profiles?.name || "Unknown";
+          const userName = profileMap.get(userId) || "Unknown";
+          const word = wordMap.get(stat.word_id);
           
           // Aggregate user stats
           if (!userMap.has(userId)) {
@@ -72,11 +87,11 @@ export const Stats = () => {
           userStat.totalSuccesses += stat.successes;
 
           // Add word stats
-          if (stat.words) {
+          if (word) {
             wordStatsList.push({
               wordId: stat.word_id,
-              english: stat.words.english,
-              hebrew: stat.words.hebrew,
+              english: word.english,
+              hebrew: word.hebrew,
               userName,
               attempts: stat.attempts,
               successes: stat.successes,
