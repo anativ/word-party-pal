@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { QuizGame } from "@/components/QuizGame";
 import { AdminPanel } from "@/components/AdminPanel";
+import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
 import { BookOpen, Shield, LogOut, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,6 +11,8 @@ import { toast } from "sonner";
 const Index = () => {
   const [mode, setMode] = useState<"quiz" | "admin">("quiz");
   const [userName, setUserName] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminDialog, setShowAdminDialog] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,11 +32,34 @@ const Index = () => {
       .from("profiles")
       .select("name")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile) {
       setUserName(profile.name);
     }
+
+    // Check if user has admin role
+    const { data: adminRole } = await supabase
+      .from("user_roles")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    setIsAdmin(!!adminRole);
+  };
+
+  const handleAdminClick = () => {
+    if (isAdmin) {
+      setMode("admin");
+    } else {
+      setShowAdminDialog(true);
+    }
+  };
+
+  const handleAdminAccessGranted = () => {
+    setIsAdmin(true);
+    setMode("admin");
   };
 
   const handleLogout = async () => {
@@ -72,7 +98,7 @@ const Index = () => {
             Practice
           </Button>
           <Button
-            onClick={() => setMode("admin")}
+            onClick={handleAdminClick}
             variant={mode === "admin" ? "default" : "outline"}
             className="flex-1"
             size="lg"
@@ -92,6 +118,12 @@ const Index = () => {
         </div>
 
         {mode === "quiz" ? <QuizGame /> : <AdminPanel />}
+
+        <AdminPasswordDialog
+          open={showAdminDialog}
+          onOpenChange={setShowAdminDialog}
+          onSuccess={handleAdminAccessGranted}
+        />
       </div>
     </div>
   );
