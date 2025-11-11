@@ -23,6 +23,7 @@ export const QuizGame = () => {
   const [currentWordStats, setCurrentWordStats] = useState<WordStats | null>(null);
   const [userAnswer, setUserAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionSuccesses, setSessionSuccesses] = useState(0);
@@ -51,6 +52,7 @@ export const QuizGame = () => {
     setCurrentWord(selectedWord);
     setUserAnswer("");
     setShowResult(false);
+    setShowAnswer(false);
     
     // Fetch stats for the selected word
     const { data: stats } = await supabase
@@ -127,6 +129,16 @@ export const QuizGame = () => {
 
   const handleNext = () => {
     selectRandomWord(words);
+  };
+
+  const handleTryAgain = () => {
+    setUserAnswer("");
+    setShowResult(false);
+    setShowAnswer(false);
+  };
+
+  const handleShowAnswer = () => {
+    setShowAnswer(true);
   };
 
   const handleReset = () => {
@@ -250,31 +262,61 @@ export const QuizGame = () => {
                 <div className="space-y-4">
                   <X className="h-16 w-16 mx-auto text-fail" />
                   <h3 className="text-3xl font-bold text-fail">Not quite!</h3>
-                  <div className="space-y-2">
-                    <p className="text-lg">
-                      Your answer: <span className="font-bold">{userAnswer}</span>
-                    </p>
-                    <p className="text-lg">
-                      Correct answer: <span className="font-bold text-success">{currentWord.english}</span>
-                    </p>
-                  </div>
-                  {currentWordStats && (
-                    <div className="mt-4 p-4 bg-background/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-1">Success Rate</div>
-                      <div className="text-2xl font-bold">
-                        {calculateSuccessRate(currentWordStats)}%
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        {currentWordStats.successes} correct out of {currentWordStats.attempts} attempts
+                  
+                  {!showAnswer ? (
+                    <div className="space-y-4 mt-6">
+                      <p className="text-lg text-muted-foreground">
+                        Would you like to try again or see the answer?
+                      </p>
+                      <div className="flex gap-3">
+                        <Button 
+                          onClick={handleTryAgain} 
+                          variant="outline"
+                          className="flex-1"
+                          size="lg"
+                        >
+                          Try Again
+                        </Button>
+                        <Button 
+                          onClick={handleShowAnswer}
+                          className="flex-1"
+                          size="lg"
+                        >
+                          Show Answer
+                        </Button>
                       </div>
                     </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <p className="text-lg">
+                          Your answer: <span className="font-bold">{userAnswer}</span>
+                        </p>
+                        <p className="text-lg">
+                          Correct answer: <span className="font-bold text-success">{currentWord.english}</span>
+                        </p>
+                      </div>
+                      {currentWordStats && (
+                        <div className="mt-4 p-4 bg-background/50 rounded-lg">
+                          <div className="text-sm text-muted-foreground mb-1">Success Rate</div>
+                          <div className="text-2xl font-bold">
+                            {calculateSuccessRate(currentWordStats)}%
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {currentWordStats.successes} correct out of {currentWordStats.attempts} attempts
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
             </div>
-            <Button onClick={handleNext} className="w-full" size="lg">
-              Next Word
-            </Button>
+            {(isCorrect || showAnswer) && (
+              <Button onClick={handleNext} className="w-full" size="lg">
+                Next Word
+              </Button>
+            )}
           </div>
         )}
         </CardContent>
