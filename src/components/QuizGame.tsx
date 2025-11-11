@@ -49,17 +49,37 @@ export const QuizGame = () => {
   };
 
   const selectRandomWord = async (wordList: Word[]) => {
-    const randomIndex = Math.floor(Math.random() * wordList.length);
-    const selectedWord = wordList[randomIndex];
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Fetch all word stats for current user
+    const { data: allStats } = await supabase
+      .from("word_stats")
+      .select("*")
+      .eq("user_id", user.id);
+
+    // Create a map of word_id to attempts count
+    const statsMap = new Map(allStats?.map(s => [s.word_id, s.attempts]) || []);
+
+    // Sort words by attempts (least practiced first)
+    const sortedWords = [...wordList].sort((a, b) => {
+      const attemptsA = statsMap.get(a.id) || 0;
+      const attemptsB = statsMap.get(b.id) || 0;
+      return attemptsA - attemptsB;
+    });
+
+    // Pick from the least practiced 30% of words with some randomness
+    const poolSize = Math.max(1, Math.ceil(sortedWords.length * 0.3));
+    const randomIndex = Math.floor(Math.random() * poolSize);
+    const selectedWord = sortedWords[randomIndex];
+    
     setCurrentWord(selectedWord);
     setUserAnswer("");
     setShowResult(false);
     setShowAnswer(false);
-    
-    // Fetch stats for the current user and selected word
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
 
+    // Get stats for the selected word
     const { data: stats } = await supabase
       .from("word_stats")
       .select("*")
