@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Sparkles, X, RotateCcw } from "lucide-react";
+import confetti from "canvas-confetti";
+import { playSuccessSound, playFailSound } from "@/utils/sounds";
 
 interface Word {
   id: string;
@@ -54,23 +56,31 @@ export const QuizGame = () => {
     setShowResult(false);
     setShowAnswer(false);
     
-    // Fetch stats for the selected word
+    // Fetch stats for the current user and selected word
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     const { data: stats } = await supabase
       .from("word_stats")
       .select("*")
       .eq("word_id", selectedWord.id)
-      .single();
+      .eq("user_id", user.id)
+      .maybeSingle();
     
     setCurrentWordStats(stats);
   };
 
   const updateStats = async (wordId: string, success: boolean) => {
-    // Check if stats exist for this word
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Check if stats exist for this word and user
     const { data: existingStats } = await supabase
       .from("word_stats")
       .select("*")
       .eq("word_id", wordId)
-      .single();
+      .eq("user_id", user.id)
+      .maybeSingle();
 
     if (existingStats) {
       // Update existing stats
@@ -80,11 +90,12 @@ export const QuizGame = () => {
           attempts: existingStats.attempts + 1,
           successes: success ? existingStats.successes + 1 : existingStats.successes,
         })
-        .eq("word_id", wordId);
+        .eq("id", existingStats.id);
     } else {
       // Create new stats
       await supabase.from("word_stats").insert({
         word_id: wordId,
+        user_id: user.id,
         attempts: 1,
         successes: success ? 1 : 0,
       });
@@ -110,18 +121,30 @@ export const QuizGame = () => {
     await updateStats(currentWord.id, correct);
     
     // Fetch updated stats for display
-    const { data: updatedStats } = await supabase
-      .from("word_stats")
-      .select("*")
-      .eq("word_id", currentWord.id)
-      .single();
-    
-    setCurrentWordStats(updatedStats);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: updatedStats } = await supabase
+        .from("word_stats")
+        .select("*")
+        .eq("word_id", currentWord.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      setCurrentWordStats(updatedStats);
+    }
 
     if (correct) {
+      playSuccessSound();
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
       toast.success("🎉 Perfect!", {
         description: "Great job!",
       });
+    } else {
+      playFailSound();
     }
 
     setIsLoading(false);
@@ -307,6 +330,14 @@ export const QuizGame = () => {
                           </div>
                         </div>
                       )}
+                      <Button 
+                        onClick={handleTryAgain} 
+                        variant="outline"
+                        className="w-full mt-4"
+                        size="lg"
+                      >
+                        Try Again
+                      </Button>
                     </>
                   )}
                 </div>

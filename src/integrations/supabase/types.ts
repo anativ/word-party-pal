@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       word_stats: {
         Row: {
           attempts: number
@@ -21,6 +39,7 @@ export type Database = {
           id: string
           successes: number
           updated_at: string
+          user_id: string
           word_id: string
         }
         Insert: {
@@ -29,6 +48,7 @@ export type Database = {
           id?: string
           successes?: number
           updated_at?: string
+          user_id: string
           word_id: string
         }
         Update: {
@@ -37,17 +57,10 @@ export type Database = {
           id?: string
           successes?: number
           updated_at?: string
+          user_id?: string
           word_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "word_stats_word_id_fkey"
-            columns: ["word_id"]
-            isOneToOne: true
-            referencedRelation: "words"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       words: {
         Row: {
