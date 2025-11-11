@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Plus, Loader2, Upload } from "lucide-react";
+import { X, Plus, Loader2, Upload, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -25,6 +26,7 @@ export const AdminPanel = () => {
   const [bulkJsonData, setBulkJsonData] = useState("");
   const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
   const [isBulkUploading, setIsBulkUploading] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   useEffect(() => {
     fetchWords();
@@ -144,6 +146,26 @@ export const AdminPanel = () => {
     }
   };
 
+  const handleDeleteAll = async () => {
+    setIsDeletingAll(true);
+    try {
+      const { error } = await supabase
+        .from("words")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all by using a condition that matches everything
+
+      if (error) throw error;
+
+      toast.success("All words deleted successfully");
+      fetchWords();
+    } catch (error) {
+      console.error("Error deleting all words:", error);
+      toast.error("Failed to delete all words");
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
@@ -254,9 +276,47 @@ export const AdminPanel = () => {
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">
-            All Words ({words.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl font-bold">
+              All Words ({words.length})
+            </CardTitle>
+            {words.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    disabled={isDeletingAll}
+                  >
+                    {isDeletingAll ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="mr-2 h-4 w-4" />
+                    )}
+                    Delete All
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete all {words.length} words
+                      and their associated statistics from the database.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDeleteAll}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete All Words
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {words.length === 0 ? (
