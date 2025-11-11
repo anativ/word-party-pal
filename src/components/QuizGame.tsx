@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Sparkles, X } from "lucide-react";
+import { Sparkles, X, RotateCcw } from "lucide-react";
 
 interface Word {
   id: string;
@@ -12,13 +12,21 @@ interface Word {
   hebrew: string;
 }
 
+interface WordStats {
+  attempts: number;
+  successes: number;
+}
+
 export const QuizGame = () => {
   const [words, setWords] = useState<Word[]>([]);
   const [currentWord, setCurrentWord] = useState<Word | null>(null);
+  const [currentWordStats, setCurrentWordStats] = useState<WordStats | null>(null);
   const [userAnswer, setUserAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionSuccesses, setSessionSuccesses] = useState(0);
+  const [sessionErrors, setSessionErrors] = useState(0);
 
   useEffect(() => {
     fetchWords();
@@ -37,11 +45,21 @@ export const QuizGame = () => {
     }
   };
 
-  const selectRandomWord = (wordList: Word[]) => {
+  const selectRandomWord = async (wordList: Word[]) => {
     const randomIndex = Math.floor(Math.random() * wordList.length);
-    setCurrentWord(wordList[randomIndex]);
+    const selectedWord = wordList[randomIndex];
+    setCurrentWord(selectedWord);
     setUserAnswer("");
     setShowResult(false);
+    
+    // Fetch stats for the selected word
+    const { data: stats } = await supabase
+      .from("word_stats")
+      .select("*")
+      .eq("word_id", selectedWord.id)
+      .single();
+    
+    setCurrentWordStats(stats);
   };
 
   const updateStats = async (wordId: string, success: boolean) => {
@@ -80,7 +98,23 @@ export const QuizGame = () => {
     setIsCorrect(correct);
     setShowResult(true);
 
+    // Update session stats
+    if (correct) {
+      setSessionSuccesses(prev => prev + 1);
+    } else {
+      setSessionErrors(prev => prev + 1);
+    }
+
     await updateStats(currentWord.id, correct);
+    
+    // Fetch updated stats for display
+    const { data: updatedStats } = await supabase
+      .from("word_stats")
+      .select("*")
+      .eq("word_id", currentWord.id)
+      .single();
+    
+    setCurrentWordStats(updatedStats);
 
     if (correct) {
       toast.success("🎉 Perfect!", {
@@ -93,6 +127,17 @@ export const QuizGame = () => {
 
   const handleNext = () => {
     selectRandomWord(words);
+  };
+
+  const handleReset = () => {
+    setSessionSuccesses(0);
+    setSessionErrors(0);
+    toast.success("Session stats reset");
+  };
+
+  const calculateSuccessRate = (stats: WordStats | null) => {
+    if (!stats || stats.attempts === 0) return 0;
+    return Math.round((stats.successes / stats.attempts) * 100);
   };
 
   if (!currentWord) {
@@ -108,35 +153,69 @@ export const QuizGame = () => {
   }
 
   return (
-    <Card className="shadow-lg">
-      <CardContent className="pt-6">
-        {!showResult ? (
-          <div className="space-y-6">
-            <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground mb-2">Translate to English:</p>
-              <h2 className="text-4xl font-bold" dir="rtl">
-                {currentWord.hebrew}
-              </h2>
+    <div className="space-y-4">
+      <Card className="shadow-lg bg-muted/50">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 text-center">
+              <div className="text-sm text-muted-foreground mb-1">Session Stats</div>
+              <div className="flex items-center justify-center gap-4">
+                <span className="text-lg font-semibold text-success">
+                  ✓ {sessionSuccesses}
+                </span>
+                <span className="text-lg font-semibold text-fail">
+                  ✗ {sessionErrors}
+                </span>
+              </div>
             </div>
-            <div className="space-y-4">
-              <Input
-                value={userAnswer}
-                onChange={(e) => setUserAnswer(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                placeholder="Type your answer..."
-                className="text-lg text-center"
-                autoFocus
-              />
-              <Button
-                onClick={handleSubmit}
-                disabled={isLoading || !userAnswer.trim()}
-                className="w-full"
-                size="lg"
-              >
-                Check Answer
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="shrink-0"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-lg">
+        <CardContent className="pt-6">
+          {!showResult ? (
+            <div className="space-y-6">
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground mb-2">Translate to English:</p>
+                <h2 className="text-4xl font-bold" dir="rtl">
+                  {currentWord.hebrew}
+                </h2>
+                {currentWordStats && currentWordStats.attempts > 0 && (
+                  <div className="mt-4 text-sm text-muted-foreground">
+                    Previous success rate: {calculateSuccessRate(currentWordStats)}% 
+                    ({currentWordStats.successes}/{currentWordStats.attempts})
+                  </div>
+                )}
+              </div>
+              <div className="space-y-4">
+                <Input
+                  value={userAnswer}
+                  onChange={(e) => setUserAnswer(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                  placeholder="Type your answer..."
+                  className="text-lg text-center"
+                  autoFocus
+                />
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isLoading || !userAnswer.trim()}
+                  className="w-full"
+                  size="lg"
+                >
+                  Check Answer
+                </Button>
+              </div>
+            </div>
         ) : (
           <div className="space-y-6">
             <div
@@ -155,6 +234,17 @@ export const QuizGame = () => {
                   <p className="text-lg">
                     <span className="font-bold" dir="rtl">{currentWord.hebrew}</span> = {currentWord.english}
                   </p>
+                  {currentWordStats && (
+                    <div className="mt-4 p-4 bg-background/50 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-1">Success Rate</div>
+                      <div className="text-2xl font-bold text-success">
+                        {calculateSuccessRate(currentWordStats)}%
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {currentWordStats.successes} correct out of {currentWordStats.attempts} attempts
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -168,6 +258,17 @@ export const QuizGame = () => {
                       Correct answer: <span className="font-bold text-success">{currentWord.english}</span>
                     </p>
                   </div>
+                  {currentWordStats && (
+                    <div className="mt-4 p-4 bg-background/50 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-1">Success Rate</div>
+                      <div className="text-2xl font-bold">
+                        {calculateSuccessRate(currentWordStats)}%
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {currentWordStats.successes} correct out of {currentWordStats.attempts} attempts
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -176,7 +277,8 @@ export const QuizGame = () => {
             </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
