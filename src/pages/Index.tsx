@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { WordManager } from "@/components/WordManager";
 import { QuizGame } from "@/components/QuizGame";
-import { BookOpen, Plus } from "lucide-react";
+import { AdminPanel } from "@/components/AdminPanel";
+import { BookOpen, Shield } from "lucide-react";
 
 const Index = () => {
-  const [mode, setMode] = useState<"quiz" | "manage">("quiz");
+  const [mode, setMode] = useState<"quiz" | "admin">("quiz");
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-2xl mx-auto px-4 py-8">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             English Learning
@@ -28,17 +28,17 @@ const Index = () => {
             Practice
           </Button>
           <Button
-            onClick={() => setMode("manage")}
-            variant={mode === "manage" ? "default" : "outline"}
+            onClick={() => setMode("admin")}
+            variant={mode === "admin" ? "default" : "outline"}
             className="flex-1"
             size="lg"
           >
-            <Plus className="mr-2 h-5 w-5" />
-            Add Words
+            <Shield className="mr-2 h-5 w-5" />
+            Admin
           </Button>
         </div>
 
-        {mode === "quiz" ? <QuizGame /> : <WordManager />}
+        {mode === "quiz" ? <QuizGame /> : <AdminPanel />}
       </div>
     </div>
   );
