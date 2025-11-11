@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -31,6 +31,10 @@ export const Stats = () => {
   const [wordStats, setWordStats] = useState<WordStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [userSortKey, setUserSortKey] = useState<keyof UserStats | null>(null);
+  const [userSortOrder, setUserSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [wordSortKey, setWordSortKey] = useState<keyof WordStat | null>(null);
+  const [wordSortOrder, setWordSortOrder] = useState<'asc' | 'desc'>('desc');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -139,6 +143,46 @@ export const Stats = () => {
     }
   };
 
+  const handleUserSort = (key: keyof UserStats) => {
+    if (userSortKey === key) {
+      setUserSortOrder(userSortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setUserSortKey(key);
+      setUserSortOrder('desc');
+    }
+  };
+
+  const handleWordSort = (key: keyof WordStat) => {
+    if (wordSortKey === key) {
+      setWordSortOrder(wordSortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setWordSortKey(key);
+      setWordSortOrder('desc');
+    }
+  };
+
+  const sortedUserStats = [...userStats].sort((a, b) => {
+    if (!userSortKey) return 0;
+    const aVal = a[userSortKey];
+    const bVal = b[userSortKey];
+    const order = userSortOrder === 'asc' ? 1 : -1;
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return aVal.localeCompare(bVal) * order;
+    }
+    return ((aVal as number) - (bVal as number)) * order;
+  });
+
+  const sortedWordStats = [...wordStats].sort((a, b) => {
+    if (!wordSortKey) return 0;
+    const aVal = a[wordSortKey];
+    const bVal = b[wordSortKey];
+    const order = wordSortOrder === 'asc' ? 1 : -1;
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return aVal.localeCompare(bVal) * order;
+    }
+    return ((aVal as number) - (bVal as number)) * order;
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -179,10 +223,26 @@ export const Stats = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead className="text-right">Attempts</TableHead>
-                  <TableHead className="text-right">Successes</TableHead>
-                  <TableHead className="text-right">Success Rate</TableHead>
+                  <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleUserSort('userName')}>
+                    <div className="flex items-center gap-2">
+                      User <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleUserSort('totalAttempts')}>
+                    <div className="flex items-center justify-end gap-2">
+                      Attempts <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleUserSort('totalSuccesses')}>
+                    <div className="flex items-center justify-end gap-2">
+                      Successes <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleUserSort('successRate')}>
+                    <div className="flex items-center justify-end gap-2">
+                      Success Rate <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -193,7 +253,7 @@ export const Stats = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  userStats.map((stat) => (
+                  sortedUserStats.map((stat) => (
                     <TableRow key={stat.userId}>
                       <TableCell className="font-medium">{stat.userName}</TableCell>
                       <TableCell className="text-right">{stat.totalAttempts}</TableCell>
@@ -219,12 +279,36 @@ export const Stats = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Word (Hebrew)</TableHead>
-                  <TableHead>Translation</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead className="text-right">Attempts</TableHead>
-                  <TableHead className="text-right">Successes</TableHead>
-                  <TableHead className="text-right">Success Rate</TableHead>
+                  <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleWordSort('hebrew')}>
+                    <div className="flex items-center gap-2">
+                      Word (Hebrew) <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleWordSort('english')}>
+                    <div className="flex items-center gap-2">
+                      Translation <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleWordSort('userName')}>
+                    <div className="flex items-center gap-2">
+                      User <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleWordSort('attempts')}>
+                    <div className="flex items-center justify-end gap-2">
+                      Attempts <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleWordSort('successes')}>
+                    <div className="flex items-center justify-end gap-2">
+                      Successes <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleWordSort('successRate')}>
+                    <div className="flex items-center justify-end gap-2">
+                      Success Rate <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -235,7 +319,7 @@ export const Stats = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  wordStats.map((stat, idx) => (
+                  sortedWordStats.map((stat, idx) => (
                     <TableRow key={`${stat.wordId}-${stat.userName}-${idx}`}>
                       <TableCell dir="rtl" className="font-medium">{stat.hebrew}</TableCell>
                       <TableCell>{stat.english}</TableCell>
