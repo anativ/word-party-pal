@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { X, Plus, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { X, Plus, Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -20,6 +22,9 @@ export const AdminPanel = () => {
   const [hebrew, setHebrew] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [bulkJsonData, setBulkJsonData] = useState("");
+  const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
+  const [isBulkUploading, setIsBulkUploading] = useState(false);
 
   useEffect(() => {
     fetchWords();
@@ -86,12 +91,74 @@ export const AdminPanel = () => {
     }
   };
 
+  const handleBulkUpload = async () => {
+    if (!bulkJsonData.trim()) {
+      toast.error("Please paste JSON data");
+      return;
+    }
+
+    setIsBulkUploading(true);
+    try {
+      const parsed = JSON.parse(bulkJsonData);
+      
+      // Validate the structure
+      if (!Array.isArray(parsed)) {
+        throw new Error("JSON must be an array of word objects");
+      }
+
+      // Validate each word has english and hebrew fields
+      const validWords = parsed.filter(item => {
+        if (typeof item !== 'object' || !item.english || !item.hebrew) {
+          return false;
+        }
+        return true;
+      });
+
+      if (validWords.length === 0) {
+        throw new Error("No valid words found. Each word must have 'english' and 'hebrew' fields");
+      }
+
+      // Insert all words
+      const { error } = await supabase
+        .from("words")
+        .insert(validWords.map(w => ({
+          english: w.english.trim(),
+          hebrew: w.hebrew.trim()
+        })));
+
+      if (error) throw error;
+
+      toast.success(`Successfully added ${validWords.length} words! 🎉`);
+      setBulkJsonData("");
+      setIsBulkDialogOpen(false);
+      fetchWords();
+    } catch (error) {
+      console.error("Error bulk uploading:", error);
+      if (error instanceof SyntaxError) {
+        toast.error("Invalid JSON format. Please check your data.");
+      } else {
+        toast.error(error instanceof Error ? error.message : "Failed to upload words");
+      }
+    } finally {
+      setIsBulkUploading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Add New Word</CardTitle>
-        </CardHeader>
+      <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
+        <Card className="shadow-lg">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl font-bold">Add New Word</CardTitle>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Bulk Upload
+                </Button>
+              </DialogTrigger>
+            </div>
+          </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -127,8 +194,63 @@ export const AdminPanel = () => {
             )}
             Add Word
           </Button>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Upload Words</DialogTitle>
+            <DialogDescription>
+              Paste your JSON data below. The format should be an array of objects with 'english' and 'hebrew' fields.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">JSON Data</label>
+              <Textarea
+                value={bulkJsonData}
+                onChange={(e) => setBulkJsonData(e.target.value)}
+                placeholder={`[\n  { "english": "hello", "hebrew": "שלום" },\n  { "english": "world", "hebrew": "עולם" }\n]`}
+                className="font-mono text-sm min-h-[300px]"
+              />
+            </div>
+            <div className="bg-muted p-4 rounded-lg text-sm">
+              <p className="font-semibold mb-2">Example format:</p>
+              <pre className="text-xs overflow-x-auto">
+{`[
+  { "english": "hello", "hebrew": "שלום" },
+  { "english": "world", "hebrew": "עולם" },
+  { "english": "thank you", "hebrew": "תודה" }
+]`}
+              </pre>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleBulkUpload}
+                disabled={isBulkUploading || !bulkJsonData.trim()}
+                className="flex-1"
+              >
+                {isBulkUploading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                Upload Words
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setBulkJsonData("");
+                  setIsBulkDialogOpen(false);
+                }}
+                disabled={isBulkUploading}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Card className="shadow-lg">
         <CardHeader>
