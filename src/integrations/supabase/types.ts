@@ -90,7 +90,15 @@ export type Database = {
           user_id?: string
           word_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "word_stats_word_id_fkey"
+            columns: ["word_id"]
+            isOneToOne: false
+            referencedRelation: "words"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       words: {
         Row: {
