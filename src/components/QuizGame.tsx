@@ -100,9 +100,17 @@ export const QuizGame = () => {
         const statsA = statsMap.get(a.id);
         const statsB = statsMap.get(b.id);
         
-        // Calculate success rates (0 if no attempts)
-        const rateA = statsA && statsA.attempts > 0 ? statsA.successes / statsA.attempts : 0;
-        const rateB = statsB && statsB.attempts > 0 ? statsB.successes / statsB.attempts : 0;
+        const attemptsA = statsA?.attempts || 0;
+        const attemptsB = statsB?.attempts || 0;
+        
+        // Words with no attempts go to the end
+        if (attemptsA === 0 && attemptsB === 0) return 0;
+        if (attemptsA === 0) return 1;
+        if (attemptsB === 0) return -1;
+        
+        // Calculate success rates for words with attempts
+        const rateA = statsA.successes / statsA.attempts;
+        const rateB = statsB.successes / statsB.attempts;
         
         return rateA - rateB; // Lowest success rate first
       });
