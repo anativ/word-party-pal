@@ -218,10 +218,16 @@ const Settings = () => {
                     Least Seen - Always pick the least practiced word
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 mb-3">
                   <RadioGroupItem value="random_priority_least_seen" id="random_priority_least_seen" />
                   <Label htmlFor="random_priority_least_seen" className="font-normal">
                     Smart Random - Random selection with priority to less practiced words
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="lowest_success_rate" id="lowest_success_rate" />
+                  <Label htmlFor="lowest_success_rate" className="font-normal">
+                    Lowest Success Rate - Prioritize words you struggle with most
                   </Label>
                 </div>
               </RadioGroup>

@@ -92,6 +92,22 @@ export const QuizGame = () => {
     if (wordOrder === "random") {
       // Pure random selection
       selectedWord = availableWords[Math.floor(Math.random() * availableWords.length)];
+    } else if (wordOrder === "lowest_success_rate") {
+      // Sort by success rate (lowest first)
+      const statsMap = new Map(allStats?.map(s => [s.word_id, { attempts: s.attempts, successes: s.successes }]) || []);
+      
+      const sortedWords = [...availableWords].sort((a, b) => {
+        const statsA = statsMap.get(a.id);
+        const statsB = statsMap.get(b.id);
+        
+        // Calculate success rates (0 if no attempts)
+        const rateA = statsA && statsA.attempts > 0 ? statsA.successes / statsA.attempts : 0;
+        const rateB = statsB && statsB.attempts > 0 ? statsB.successes / statsB.attempts : 0;
+        
+        return rateA - rateB; // Lowest success rate first
+      });
+      
+      selectedWord = sortedWords[0];
     } else {
       // Create a map of word_id to attempts count
       const statsMap = new Map(allStats?.map(s => [s.word_id, s.attempts]) || []);
