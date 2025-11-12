@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Plus, Loader2, Upload, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,8 @@ export const AdminPanel = () => {
   const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
   const [isBulkUploading, setIsBulkUploading] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [showClearStatsDialog, setShowClearStatsDialog] = useState(false);
+  const [showClearStatsConfirm, setShowClearStatsConfirm] = useState(false);
 
   useEffect(() => {
     fetchWords();
@@ -166,6 +169,24 @@ export const AdminPanel = () => {
     }
   };
 
+  const handleClearStats = async () => {
+    try {
+      const { error } = await supabase
+        .from("word_stats")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all rows
+
+      if (error) throw error;
+
+      toast.success("All stats cleared successfully");
+      setShowClearStatsDialog(false);
+      setShowClearStatsConfirm(false);
+    } catch (error: any) {
+      console.error("Error clearing stats:", error);
+      toast.error("Failed to clear stats");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
@@ -280,22 +301,56 @@ export const AdminPanel = () => {
             <CardTitle className="text-2xl font-bold">
               All Words ({words.length})
             </CardTitle>
-            {words.length > 0 && (
-              <AlertDialog>
+            <div className="flex gap-2">
+              <AlertDialog open={showClearStatsConfirm} onOpenChange={setShowClearStatsConfirm}>
                 <AlertDialogTrigger asChild>
                   <Button 
                     variant="destructive" 
                     size="sm"
-                    disabled={isDeletingAll}
                   >
-                    {isDeletingAll ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="mr-2 h-4 w-4" />
-                    )}
-                    Delete All
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Clear All Stats
                   </Button>
                 </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete all statistics
+                      for all users and words from the database.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => {
+                        setShowClearStatsConfirm(false);
+                        setShowClearStatsDialog(true);
+                      }}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
+              {words.length > 0 && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      disabled={isDeletingAll}
+                    >
+                      {isDeletingAll ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="mr-2 h-4 w-4" />
+                      )}
+                      Delete All Words
+                    </Button>
+                  </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -315,7 +370,8 @@ export const AdminPanel = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            )}
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -363,6 +419,12 @@ export const AdminPanel = () => {
           )}
         </CardContent>
       </Card>
+
+      <AdminPasswordDialog
+        open={showClearStatsDialog}
+        onOpenChange={setShowClearStatsDialog}
+        onSuccess={handleClearStats}
+      />
     </div>
   );
 };

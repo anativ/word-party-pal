@@ -3,8 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
-import { ArrowLeft, Trash2, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -30,7 +29,6 @@ export const Stats = () => {
   const [userStats, setUserStats] = useState<UserStats[]>([]);
   const [wordStats, setWordStats] = useState<WordStat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [userSortKey, setUserSortKey] = useState<keyof UserStats | null>(null);
   const [userSortOrder, setUserSortOrder] = useState<'asc' | 'desc'>('desc');
   const [wordSortKey, setWordSortKey] = useState<keyof WordStat | null>(null);
@@ -125,23 +123,6 @@ export const Stats = () => {
     }
   };
 
-  const handleClearStats = async () => {
-    try {
-      const { error } = await supabase
-        .from("word_stats")
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all rows
-
-      if (error) throw error;
-
-      toast.success("All stats cleared successfully");
-      setUserStats([]);
-      setWordStats([]);
-    } catch (error: any) {
-      console.error("Error clearing stats:", error);
-      toast.error("Failed to clear stats");
-    }
-  };
 
   const handleUserSort = (key: keyof UserStats) => {
     if (userSortKey === key) {
@@ -194,20 +175,13 @@ export const Stats = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6">
           <Button
             variant="outline"
             onClick={() => navigate("/")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Game
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => setShowAdminDialog(true)}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Clear All Stats
           </Button>
         </div>
 
@@ -338,12 +312,6 @@ export const Stats = () => {
             </Table>
           </CardContent>
         </Card>
-
-        <AdminPasswordDialog
-          open={showAdminDialog}
-          onOpenChange={setShowAdminDialog}
-          onSuccess={handleClearStats}
-        />
       </div>
     </div>
   );
