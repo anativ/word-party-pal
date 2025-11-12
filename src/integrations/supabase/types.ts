@@ -64,6 +64,7 @@ export type Database = {
           attempts: number
           created_at: string
           id: string
+          skipped: boolean
           successes: number
           updated_at: string
           user_id: string
@@ -73,6 +74,7 @@ export type Database = {
           attempts?: number
           created_at?: string
           id?: string
+          skipped?: boolean
           successes?: number
           updated_at?: string
           user_id: string
@@ -82,6 +84,7 @@ export type Database = {
           attempts?: number
           created_at?: string
           id?: string
+          skipped?: boolean
           successes?: number
           updated_at?: string
           user_id?: string

@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
@@ -17,9 +17,11 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [wordOrder, setWordOrder] = useState("random_priority_least_seen");
   const [userId, setUserId] = useState<string | null>(null);
+  const [skippedWords, setSkippedWords] = useState<Array<{ id: string; word_id: string; english: string; hebrew: string }>>([]);
 
   useEffect(() => {
     loadSettings();
+    loadSkippedWords();
   }, []);
 
   const loadSettings = async () => {
@@ -48,6 +50,38 @@ const Settings = () => {
       console.error("Error loading settings:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSkippedWords = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: stats } = await supabase
+        .from("word_stats")
+        .select(`
+          id,
+          word_id,
+          words:word_id (
+            english,
+            hebrew
+          )
+        `)
+        .eq("user_id", user.id)
+        .eq("skipped", true);
+
+      if (stats) {
+        const formattedWords = stats.map((stat: any) => ({
+          id: stat.id,
+          word_id: stat.word_id,
+          english: stat.words.english,
+          hebrew: stat.words.hebrew,
+        }));
+        setSkippedWords(formattedWords);
+      }
+    } catch (error) {
+      console.error("Error loading skipped words:", error);
     }
   };
 
@@ -97,6 +131,29 @@ const Settings = () => {
       toast({
         title: "Error",
         description: "Failed to update settings",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUnskipWord = async (statsId: string) => {
+    try {
+      await supabase
+        .from("word_stats")
+        .update({ skipped: false })
+        .eq("id", statsId);
+
+      toast({
+        title: "Word unskipped",
+        description: "Word will appear in practice again",
+      });
+
+      loadSkippedWords();
+    } catch (error) {
+      console.error("Error unskipping word:", error);
+      toast({
+        title: "Error",
+        description: "Failed to unskip word",
         variant: "destructive",
       });
     }
@@ -168,6 +225,41 @@ const Settings = () => {
                   </Label>
                 </div>
               </RadioGroup>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Skipped Words</CardTitle>
+              <CardDescription>Words you've chosen to skip forever</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {skippedWords.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No words skipped yet
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {skippedWords.map((word) => (
+                    <div
+                      key={word.id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium">{word.english}</div>
+                        <div className="text-sm text-muted-foreground" dir="rtl">{word.hebrew}</div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleUnskipWord(word.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

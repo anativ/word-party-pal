@@ -72,21 +72,32 @@ export const QuizGame = () => {
 
     let selectedWord: Word;
 
+    // Fetch all word stats for current user
+    const { data: allStats } = await supabase
+      .from("word_stats")
+      .select("*")
+      .eq("user_id", user.id);
+
+    // Filter out skipped words
+    const skippedWordIds = new Set(
+      allStats?.filter(s => s.skipped).map(s => s.word_id) || []
+    );
+    const availableWords = wordList.filter(w => !skippedWordIds.has(w.id));
+
+    if (availableWords.length === 0) {
+      toast.error("All words are skipped! Please unskip some words in settings.");
+      return;
+    }
+
     if (wordOrder === "random") {
       // Pure random selection
-      selectedWord = wordList[Math.floor(Math.random() * wordList.length)];
+      selectedWord = availableWords[Math.floor(Math.random() * availableWords.length)];
     } else {
-      // Fetch all word stats for current user
-      const { data: allStats } = await supabase
-        .from("word_stats")
-        .select("*")
-        .eq("user_id", user.id);
-
       // Create a map of word_id to attempts count
       const statsMap = new Map(allStats?.map(s => [s.word_id, s.attempts]) || []);
 
       // Sort words by attempts (least practiced first)
-      const sortedWords = [...wordList].sort((a, b) => {
+      const sortedWords = [...availableWords].sort((a, b) => {
         const attemptsA = statsMap.get(a.id) || 0;
         const attemptsB = statsMap.get(b.id) || 0;
         return attemptsA - attemptsB;
@@ -207,6 +218,44 @@ export const QuizGame = () => {
     setUserAnswer("");
     setShowResult(false);
     setShowAnswer(false);
+  };
+
+  const handleSkipForever = async () => {
+    if (!currentWord) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Check if stats exist, if not create them
+    const { data: existingStats } = await supabase
+      .from("word_stats")
+      .select("*")
+      .eq("word_id", currentWord.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (existingStats) {
+      await supabase
+        .from("word_stats")
+        .update({ skipped: true })
+        .eq("id", existingStats.id);
+    } else {
+      await supabase
+        .from("word_stats")
+        .insert({
+          word_id: currentWord.id,
+          user_id: user.id,
+          skipped: true,
+          attempts: 0,
+          successes: 0,
+        });
+    }
+
+    toast.success("Word skipped", {
+      description: "You can unskip it in settings",
+    });
+
+    handleNext();
   };
 
   const handleShowAnswer = () => {
@@ -379,14 +428,24 @@ export const QuizGame = () => {
                           </div>
                         </div>
                       )}
-                      <Button 
-                        onClick={handleTryAgain} 
-                        variant="outline"
-                        className="w-full mt-4"
-                        size="lg"
-                      >
-                        Try Again
-                      </Button>
+                      <div className="flex gap-3 mt-6">
+                        <Button 
+                          onClick={handleTryAgain} 
+                          variant="outline"
+                          className="flex-1"
+                          size="lg"
+                        >
+                          Try Again
+                        </Button>
+                        <Button 
+                          onClick={handleSkipForever}
+                          variant="destructive"
+                          className="flex-1"
+                          size="lg"
+                        >
+                          Skip Forever
+                        </Button>
+                      </div>
                     </>
                   )}
                 </div>
