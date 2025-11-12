@@ -181,6 +181,32 @@ const Settings = () => {
     }
   };
 
+  const handleClearAllSkipped = async () => {
+    if (!userId || skippedWords.length === 0) return;
+
+    try {
+      await supabase
+        .from("word_stats")
+        .update({ skipped: false })
+        .eq("user_id", userId)
+        .eq("skipped", true);
+
+      toast({
+        title: "All words unskipped",
+        description: "All words will appear in practice again",
+      });
+
+      loadSkippedWords();
+    } catch (error) {
+      console.error("Error clearing skipped words:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear skipped words",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
@@ -246,10 +272,16 @@ const Settings = () => {
                     Smart Random - Random selection with priority to less practiced words
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 mb-3">
                   <RadioGroupItem value="lowest_success_rate" id="lowest_success_rate" />
                   <Label htmlFor="lowest_success_rate" className="font-normal">
                     Lowest Success Rate - Prioritize words you struggle with most
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="by_order" id="by_order" />
+                  <Label htmlFor="by_order" className="font-normal">
+                    By Order - Practice words sequentially in order
                   </Label>
                 </div>
               </RadioGroup>
@@ -258,8 +290,21 @@ const Settings = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Skipped Words</CardTitle>
-              <CardDescription>Words you've chosen to skip forever</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Skipped Words</CardTitle>
+                  <CardDescription>Words you've chosen to skip forever</CardDescription>
+                </div>
+                {skippedWords.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearAllSkipped}
+                  >
+                    Clear All
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {skippedWords.length === 0 ? (
