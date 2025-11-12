@@ -31,7 +31,7 @@ export const QuizGame = () => {
   const [sessionSuccesses, setSessionSuccesses] = useState(0);
   const [sessionErrors, setSessionErrors] = useState(0);
   const [wordOrder, setWordOrder] = useState<string>("random_priority_least_seen");
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentWordIndex, setCurrentWordIndex] = useState<number>(0);
 
   useEffect(() => {
     fetchWords();
@@ -94,10 +94,9 @@ export const QuizGame = () => {
       // Pure random selection
       selectedWord = availableWords[Math.floor(Math.random() * availableWords.length)];
     } else if (wordOrder === "by_order") {
-      // Sequential round-robin selection
-      const nextIndex = currentWordIndex % availableWords.length;
-      selectedWord = availableWords[nextIndex];
-      setCurrentWordIndex(nextIndex + 1);
+      // Sequential round-robin through all available words
+      selectedWord = availableWords[currentWordIndex % availableWords.length];
+      setCurrentWordIndex(prev => prev + 1);
     } else if (wordOrder === "lowest_success_rate") {
       // Sort by success rate (lowest first)
       const statsMap = new Map(allStats?.map(s => [s.word_id, { attempts: s.attempts, successes: s.successes }]) || []);

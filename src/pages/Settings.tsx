@@ -182,7 +182,7 @@ const Settings = () => {
   };
 
   const handleClearAllSkipped = async () => {
-    if (!userId || skippedWords.length === 0) return;
+    if (!userId) return;
 
     try {
       await supabase
@@ -206,6 +206,7 @@ const Settings = () => {
       });
     }
   };
+
 
   if (loading) {
     return (
