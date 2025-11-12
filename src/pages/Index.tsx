@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { QuizGame } from "@/components/QuizGame";
 import { AdminPanel } from "@/components/AdminPanel";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
-import { BookOpen, Shield, LogOut, BarChart3, Settings, RefreshCw } from "lucide-react";
+import { MobileNav } from "@/components/MobileNav";
+import { BookOpen, Shield, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -70,30 +71,47 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-8">
-        <header className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              English Learning
-            </h1>
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium">Hi, {userName}!</span>
-              <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate("/settings")}>
-                <Settings className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+      <div className="container max-w-4xl mx-auto px-4 py-4 md:py-8">
+        <header className="mb-6">
+          {/* Mobile Navigation */}
+          <div className="md:hidden mb-4">
+            <MobileNav
+              mode={mode}
+              onModeChange={setMode}
+              onAdminClick={handleAdminClick}
+              onStatsClick={() => navigate("/stats")}
+              onSettingsClick={() => navigate("/settings")}
+              onLogout={handleLogout}
+              onRefresh={() => window.location.reload()}
+              userName={userName}
+            />
           </div>
-          <p className="text-muted-foreground text-center">Practice Hebrew to English translations</p>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                English Learning
+              </h1>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium">Hi, {userName}!</span>
+                <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+                  Refresh
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate("/settings")}>
+                  Settings
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-center">Practice Hebrew to English translations</p>
+          </div>
         </header>
 
-        <div className="flex gap-2 mb-6">
+        {/* Desktop Tabs */}
+        <div className="hidden md:flex gap-2 mb-6">
           <Button
             onClick={() => setMode("quiz")}
             variant={mode === "quiz" ? "default" : "outline"}
