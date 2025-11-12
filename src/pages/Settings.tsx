@@ -38,7 +38,7 @@ const Settings = () => {
         .from("profiles")
         .select("dark_mode, word_order")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profile) {
         setWordOrder(profile.word_order || "random_priority_least_seen");
@@ -92,10 +92,21 @@ const Settings = () => {
     setTheme(checked ? "dark" : "light");
 
     try {
-      await supabase
+      const { data: updated, error: updateError } = await supabase
         .from("profiles")
         .update({ dark_mode: checked })
-        .eq("id", userId);
+        .eq("id", userId)
+        .select("id")
+        .maybeSingle();
+
+      if (updateError) throw updateError;
+
+      if (!updated) {
+        const { error: insertError } = await supabase
+          .from("profiles")
+          .insert([{ id: userId, name: "User", dark_mode: checked, word_order: "random_priority_least_seen" }]);
+        if (insertError) throw insertError;
+      }
 
       toast({
         title: "Settings updated",
@@ -117,10 +128,21 @@ const Settings = () => {
     setWordOrder(value);
 
     try {
-      await supabase
+      const { data: updated, error: updateError } = await supabase
         .from("profiles")
         .update({ word_order: value })
-        .eq("id", userId);
+        .eq("id", userId)
+        .select("id")
+        .maybeSingle();
+
+      if (updateError) throw updateError;
+
+      if (!updated) {
+        const { error: insertError } = await supabase
+          .from("profiles")
+          .insert([{ id: userId, name: "User", word_order: value }]);
+        if (insertError) throw insertError;
+      }
 
       toast({
         title: "Settings updated",
