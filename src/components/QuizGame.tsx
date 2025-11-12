@@ -311,33 +311,6 @@ export const QuizGame = () => {
 
   return (
     <div className="space-y-4">
-      <Card className="shadow-lg bg-muted/50">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 text-center">
-              <div className="text-sm text-muted-foreground mb-1">Session Stats</div>
-              <div className="flex items-center justify-center gap-4">
-                <span className="text-lg font-semibold text-success">
-                  ✓ {sessionSuccesses}
-                </span>
-                <span className="text-lg font-semibold text-fail">
-                  ✗ {sessionErrors}
-                </span>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReset}
-              className="shrink-0"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       <Card className="shadow-lg">
         <CardContent className="pt-6">
           {!showResult ? (
@@ -480,6 +453,33 @@ export const QuizGame = () => {
             )}
           </div>
         )}
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-lg bg-muted/50">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 text-center">
+              <div className="text-sm text-muted-foreground mb-1">Session Stats</div>
+              <div className="flex items-center justify-center gap-4">
+                <span className="text-lg font-semibold text-success">
+                  ✓ {sessionSuccesses}
+                </span>
+                <span className="text-lg font-semibold text-fail">
+                  ✗ {sessionErrors}
+                </span>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="shrink-0"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
