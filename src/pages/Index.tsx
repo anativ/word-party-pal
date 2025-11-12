@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { QuizGame } from "@/components/QuizGame";
 import { AdminPanel } from "@/components/AdminPanel";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
-import { BookOpen, Shield, LogOut, BarChart3 } from "lucide-react";
+import { BookOpen, Shield, LogOut, BarChart3, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -78,6 +78,9 @@ const Index = () => {
             </h1>
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium">Hi, {userName}!</span>
+              <Button variant="outline" size="sm" onClick={() => navigate("/settings")}>
+                <Settings className="h-4 w-4" />
+              </Button>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout

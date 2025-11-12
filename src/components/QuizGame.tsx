@@ -30,10 +30,34 @@ export const QuizGame = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionSuccesses, setSessionSuccesses] = useState(0);
   const [sessionErrors, setSessionErrors] = useState(0);
+  const [wordOrder, setWordOrder] = useState<string>("random_priority_least_seen");
 
   useEffect(() => {
     fetchWords();
+    loadUserSettings();
   }, []);
+
+  const loadUserSettings = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("word_order, dark_mode")
+      .eq("id", user.id)
+      .single();
+
+    if (profile) {
+      setWordOrder(profile.word_order || "random_priority_least_seen");
+      
+      // Apply dark mode
+      if (profile.dark_mode) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+  };
 
   const fetchWords = async () => {
     const { data, error } = await supabase.from("words").select("*");
@@ -53,26 +77,38 @@ export const QuizGame = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Fetch all word stats for current user
-    const { data: allStats } = await supabase
-      .from("word_stats")
-      .select("*")
-      .eq("user_id", user.id);
+    let selectedWord: Word;
 
-    // Create a map of word_id to attempts count
-    const statsMap = new Map(allStats?.map(s => [s.word_id, s.attempts]) || []);
+    if (wordOrder === "random") {
+      // Pure random selection
+      selectedWord = wordList[Math.floor(Math.random() * wordList.length)];
+    } else {
+      // Fetch all word stats for current user
+      const { data: allStats } = await supabase
+        .from("word_stats")
+        .select("*")
+        .eq("user_id", user.id);
 
-    // Sort words by attempts (least practiced first)
-    const sortedWords = [...wordList].sort((a, b) => {
-      const attemptsA = statsMap.get(a.id) || 0;
-      const attemptsB = statsMap.get(b.id) || 0;
-      return attemptsA - attemptsB;
-    });
+      // Create a map of word_id to attempts count
+      const statsMap = new Map(allStats?.map(s => [s.word_id, s.attempts]) || []);
 
-    // Pick from the least practiced 30% of words with some randomness
-    const poolSize = Math.max(1, Math.ceil(sortedWords.length * 0.3));
-    const randomIndex = Math.floor(Math.random() * poolSize);
-    const selectedWord = sortedWords[randomIndex];
+      // Sort words by attempts (least practiced first)
+      const sortedWords = [...wordList].sort((a, b) => {
+        const attemptsA = statsMap.get(a.id) || 0;
+        const attemptsB = statsMap.get(b.id) || 0;
+        return attemptsA - attemptsB;
+      });
+
+      if (wordOrder === "least_seen") {
+        // Always pick the least practiced word
+        selectedWord = sortedWords[0];
+      } else {
+        // random_priority_least_seen: Pick from the least practiced 30% of words
+        const poolSize = Math.max(1, Math.ceil(sortedWords.length * 0.3));
+        const randomIndex = Math.floor(Math.random() * poolSize);
+        selectedWord = sortedWords[randomIndex];
+      }
+    }
     
     setCurrentWord(selectedWord);
     setUserAnswer("");

@@ -17,18 +17,24 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          dark_mode: boolean | null
           id: string
           name: string
+          word_order: string | null
         }
         Insert: {
           created_at?: string
+          dark_mode?: boolean | null
           id: string
           name: string
+          word_order?: string | null
         }
         Update: {
           created_at?: string
+          dark_mode?: boolean | null
           id?: string
           name?: string
+          word_order?: string | null
         }
         Relationships: []
       }
