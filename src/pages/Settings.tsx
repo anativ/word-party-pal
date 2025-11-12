@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -12,8 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
   const [wordOrder, setWordOrder] = useState("random_priority_least_seen");
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -38,15 +39,10 @@ const Settings = () => {
         .single();
 
       if (profile) {
-        setDarkMode(profile.dark_mode || false);
         setWordOrder(profile.word_order || "random_priority_least_seen");
         
-        // Apply dark mode to document
-        if (profile.dark_mode) {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-        }
+        // Sync with theme provider
+        setTheme(profile.dark_mode ? "dark" : "light");
       }
     } catch (error) {
       console.error("Error loading settings:", error);
@@ -58,14 +54,8 @@ const Settings = () => {
   const handleDarkModeToggle = async (checked: boolean) => {
     if (!userId) return;
 
-    setDarkMode(checked);
-    
-    // Apply dark mode to document
-    if (checked) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    // Update theme provider
+    setTheme(checked ? "dark" : "light");
 
     try {
       await supabase
@@ -145,7 +135,7 @@ const Settings = () => {
                 <Label htmlFor="dark-mode" className="text-base">Dark Mode</Label>
                 <Switch
                   id="dark-mode"
-                  checked={darkMode}
+                  checked={theme === "dark"}
                   onCheckedChange={handleDarkModeToggle}
                 />
               </div>

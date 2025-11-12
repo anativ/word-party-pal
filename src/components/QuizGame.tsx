@@ -43,19 +43,12 @@ export const QuizGame = () => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("word_order, dark_mode")
+      .select("word_order")
       .eq("id", user.id)
       .single();
 
     if (profile) {
       setWordOrder(profile.word_order || "random_priority_least_seen");
-      
-      // Apply dark mode
-      if (profile.dark_mode) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
     }
   };
 
