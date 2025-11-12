@@ -378,6 +378,14 @@ export const QuizGame = () => {
                       </div>
                     </div>
                   )}
+                  <Button 
+                    onClick={handleSkipForever}
+                    variant="outline"
+                    className="mt-4"
+                    size="lg"
+                  >
+                    Skip Forever
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -428,24 +436,14 @@ export const QuizGame = () => {
                           </div>
                         </div>
                       )}
-                      <div className="flex gap-3 mt-6">
-                        <Button 
-                          onClick={handleTryAgain} 
-                          variant="outline"
-                          className="flex-1"
-                          size="lg"
-                        >
-                          Try Again
-                        </Button>
-                        <Button 
-                          onClick={handleSkipForever}
-                          variant="destructive"
-                          className="flex-1"
-                          size="lg"
-                        >
-                          Skip Forever
-                        </Button>
-                      </div>
+                      <Button 
+                        onClick={handleTryAgain} 
+                        variant="outline"
+                        className="w-full mt-6"
+                        size="lg"
+                      >
+                        Try Again
+                      </Button>
                     </>
                   )}
                 </div>
