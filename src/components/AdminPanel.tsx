@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Plus, Loader2, Upload, Trash2, Pencil, Check } from "lucide-react";
+import { X, Plus, Loader2, Upload, Trash2, Pencil, Check, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -34,6 +34,8 @@ export const AdminPanel = () => {
   const [editEnglish, setEditEnglish] = useState("");
   const [editHebrew, setEditHebrew] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [sortColumn, setSortColumn] = useState<"hebrew" | "english" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     fetchWords();
@@ -229,6 +231,30 @@ export const AdminPanel = () => {
       console.error("Error clearing stats:", error);
       toast.error("Failed to clear stats");
     }
+  };
+
+  const handleSort = (column: "hebrew" | "english") => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const sortedWords = [...words].sort((a, b) => {
+    if (!sortColumn) return 0;
+    const aVal = a[sortColumn].toLowerCase();
+    const bVal = b[sortColumn].toLowerCase();
+    const comparison = aVal.localeCompare(bVal);
+    return sortDirection === "asc" ? comparison : -comparison;
+  });
+
+  const SortIcon = ({ column }: { column: "hebrew" | "english" }) => {
+    if (sortColumn !== column) return <ArrowUpDown className="ml-1 h-4 w-4 inline" />;
+    return sortDirection === "asc" 
+      ? <ArrowUp className="ml-1 h-4 w-4 inline" /> 
+      : <ArrowDown className="ml-1 h-4 w-4 inline" />;
   };
 
   return (
@@ -428,13 +454,23 @@ export const AdminPanel = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40%]">Hebrew</TableHead>
-                    <TableHead className="w-[40%]">English</TableHead>
+                    <TableHead 
+                      className="w-[40%] cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("hebrew")}
+                    >
+                      Hebrew <SortIcon column="hebrew" />
+                    </TableHead>
+                    <TableHead 
+                      className="w-[40%] cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("english")}
+                    >
+                      English <SortIcon column="english" />
+                    </TableHead>
                     <TableHead className="w-[20%] text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {words.map((word) => (
+                  {sortedWords.map((word) => (
                     <TableRow key={word.id}>
                       <TableCell className="font-medium" dir="rtl">
                         {editingId === word.id ? (
