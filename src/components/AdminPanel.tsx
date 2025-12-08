@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Plus, Loader2, Upload, Trash2 } from "lucide-react";
+import { X, Plus, Loader2, Upload, Trash2, Pencil, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -30,6 +30,10 @@ export const AdminPanel = () => {
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [showClearStatsDialog, setShowClearStatsDialog] = useState(false);
   const [showClearStatsConfirm, setShowClearStatsConfirm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editEnglish, setEditEnglish] = useState("");
+  const [editHebrew, setEditHebrew] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   useEffect(() => {
     fetchWords();
@@ -155,7 +159,7 @@ export const AdminPanel = () => {
       const { error } = await supabase
         .from("words")
         .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all by using a condition that matches everything
+        .neq("id", "00000000-0000-0000-0000-000000000000");
 
       if (error) throw error;
 
@@ -166,6 +170,46 @@ export const AdminPanel = () => {
       toast.error("Failed to delete all words");
     } finally {
       setIsDeletingAll(false);
+    }
+  };
+
+  const handleStartEdit = (word: Word) => {
+    setEditingId(word.id);
+    setEditEnglish(word.english);
+    setEditHebrew(word.hebrew);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditEnglish("");
+    setEditHebrew("");
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editEnglish.trim() || !editHebrew.trim()) {
+      toast.error("Both fields are required");
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from("words")
+        .update({ english: editEnglish.trim(), hebrew: editHebrew.trim() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Word updated successfully!");
+      setEditingId(null);
+      setEditEnglish("");
+      setEditHebrew("");
+      fetchWords();
+    } catch (error) {
+      console.error("Error updating word:", error);
+      toast.error("Failed to update word");
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -393,23 +437,81 @@ export const AdminPanel = () => {
                   {words.map((word) => (
                     <TableRow key={word.id}>
                       <TableCell className="font-medium" dir="rtl">
-                        {word.hebrew}
+                        {editingId === word.id ? (
+                          <Input
+                            value={editHebrew}
+                            onChange={(e) => setEditHebrew(e.target.value)}
+                            dir="rtl"
+                            className="h-8"
+                          />
+                        ) : (
+                          word.hebrew
+                        )}
                       </TableCell>
-                      <TableCell>{word.english}</TableCell>
+                      <TableCell>
+                        {editingId === word.id ? (
+                          <Input
+                            value={editEnglish}
+                            onChange={(e) => setEditEnglish(e.target.value)}
+                            className="h-8"
+                          />
+                        ) : (
+                          word.english
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteWord(word.id)}
-                          disabled={deletingId === word.id}
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          {deletingId === word.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                        <div className="flex justify-end gap-1">
+                          {editingId === word.id ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleSaveEdit(word.id)}
+                                disabled={isSavingEdit}
+                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-100"
+                              >
+                                {isSavingEdit ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleCancelEdit}
+                                disabled={isSavingEdit}
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </>
                           ) : (
-                            <X className="h-4 w-4" />
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleStartEdit(word)}
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteWord(word.id)}
+                                disabled={deletingId === word.id}
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                {deletingId === word.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <X className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </>
                           )}
-                        </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
