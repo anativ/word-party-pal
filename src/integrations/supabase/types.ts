@@ -59,6 +59,71 @@ export type Database = {
         }
         Relationships: []
       }
+      verb_stats: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          skipped: boolean
+          successes: number
+          updated_at: string
+          user_id: string
+          verb_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          skipped?: boolean
+          successes?: number
+          updated_at?: string
+          user_id: string
+          verb_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          skipped?: boolean
+          successes?: number
+          updated_at?: string
+          user_id?: string
+          verb_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verb_stats_verb_id_fkey"
+            columns: ["verb_id"]
+            isOneToOne: false
+            referencedRelation: "verbs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verbs: {
+        Row: {
+          created_at: string
+          future: string
+          hebrew: string
+          id: string
+          past: string
+        }
+        Insert: {
+          created_at?: string
+          future: string
+          hebrew: string
+          id?: string
+          past: string
+        }
+        Update: {
+          created_at?: string
+          future?: string
+          hebrew?: string
+          id?: string
+          past?: string
+        }
+        Relationships: []
+      }
       word_stats: {
         Row: {
           attempts: number
