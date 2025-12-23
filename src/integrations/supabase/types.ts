@@ -103,24 +103,24 @@ export type Database = {
       verbs: {
         Row: {
           created_at: string
-          future: string
           hebrew: string
           id: string
           past: string
+          present: string
         }
         Insert: {
           created_at?: string
-          future: string
           hebrew: string
           id?: string
           past: string
+          present: string
         }
         Update: {
           created_at?: string
-          future?: string
           hebrew?: string
           id?: string
           past?: string
+          present?: string
         }
         Relationships: []
       }

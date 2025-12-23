@@ -12,7 +12,7 @@ interface Verb {
   id: string;
   hebrew: string;
   past: string;
-  future: string;
+  present: string;
 }
 
 interface VerbStats {
@@ -25,11 +25,11 @@ export const VerbQuizGame = () => {
   const [currentVerb, setCurrentVerb] = useState<Verb | null>(null);
   const [currentVerbStats, setCurrentVerbStats] = useState<VerbStats | null>(null);
   const [pastAnswer, setPastAnswer] = useState("");
-  const [futureAnswer, setFutureAnswer] = useState("");
+  const [presentAnswer, setPresentAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [isPastCorrect, setIsPastCorrect] = useState(false);
-  const [isFutureCorrect, setIsFutureCorrect] = useState(false);
+  const [isPresentCorrect, setIsPresentCorrect] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionSuccesses, setSessionSuccesses] = useState(0);
   const [sessionErrors, setSessionErrors] = useState(0);
@@ -136,7 +136,7 @@ export const VerbQuizGame = () => {
     
     setCurrentVerb(selectedVerb);
     setPastAnswer("");
-    setFutureAnswer("");
+    setPresentAnswer("");
     setShowResult(false);
     setShowAnswer(false);
 
@@ -184,16 +184,16 @@ export const VerbQuizGame = () => {
   };
 
   const handleSubmit = async () => {
-    if (!currentVerb || (!pastAnswer.trim() && !futureAnswer.trim())) return;
+    if (!currentVerb || (!pastAnswer.trim() && !presentAnswer.trim())) return;
 
     setIsLoading(true);
     
     const pastCorrect = normalizeAnswer(pastAnswer) === normalizeAnswer(currentVerb.past);
-    const futureCorrect = normalizeAnswer(futureAnswer) === normalizeAnswer(currentVerb.future);
-    const bothCorrect = pastCorrect && futureCorrect;
+    const presentCorrect = normalizeAnswer(presentAnswer) === normalizeAnswer(currentVerb.present);
+    const bothCorrect = pastCorrect && presentCorrect;
     
     setIsPastCorrect(pastCorrect);
-    setIsFutureCorrect(futureCorrect);
+    setIsPresentCorrect(presentCorrect);
     setShowResult(true);
 
     if (bothCorrect) {
@@ -239,7 +239,7 @@ export const VerbQuizGame = () => {
 
   const handleTryAgain = () => {
     setPastAnswer("");
-    setFutureAnswer("");
+    setPresentAnswer("");
     setShowResult(false);
     setShowAnswer(false);
   };
@@ -308,7 +308,7 @@ export const VerbQuizGame = () => {
     );
   }
 
-  const bothCorrect = isPastCorrect && isFutureCorrect;
+  const bothCorrect = isPastCorrect && isPresentCorrect;
 
   return (
     <div className="space-y-4">
@@ -342,12 +342,12 @@ export const VerbQuizGame = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-center block">Future (עתיד)</label>
+                    <label className="text-sm font-medium text-center block">Present (הווה)</label>
                     <Input
-                      value={futureAnswer}
-                      onChange={(e) => setFutureAnswer(e.target.value)}
+                      value={presentAnswer}
+                      onChange={(e) => setPresentAnswer(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                      placeholder="Type future tense..."
+                      placeholder="Type present tense..."
                       className="text-lg text-center"
                       dir="rtl"
                     />
@@ -355,7 +355,7 @@ export const VerbQuizGame = () => {
                 </div>
                 <Button
                   onClick={handleSubmit}
-                  disabled={isLoading || (!pastAnswer.trim() && !futureAnswer.trim())}
+                  disabled={isLoading || (!pastAnswer.trim() && !presentAnswer.trim())}
                   className="w-full"
                   size="lg"
                 >
@@ -386,7 +386,7 @@ export const VerbQuizGame = () => {
                         Past: <span className="font-bold text-success">{currentVerb.past}</span>
                       </p>
                       <p className="text-lg" dir="rtl">
-                        Future: <span className="font-bold text-success">{currentVerb.future}</span>
+                        Present: <span className="font-bold text-success">{currentVerb.present}</span>
                       </p>
                     </div>
                     {currentVerbStats && (
@@ -425,7 +425,7 @@ export const VerbQuizGame = () => {
                             )}
                           </p>
                           <p className="text-lg" dir="rtl">
-                            Future: {isFutureCorrect ? (
+                            Present: {isPresentCorrect ? (
                               <span className="text-success font-bold">✓ Correct</span>
                             ) : (
                               <span className="text-fail font-bold">✗ Incorrect</span>
@@ -463,10 +463,10 @@ export const VerbQuizGame = () => {
                             Correct past: <span className="font-bold text-success">{currentVerb.past}</span>
                           </p>
                           <p className="text-lg mt-4" dir="rtl">
-                            Your future: <span className={`font-bold ${isFutureCorrect ? 'text-success' : ''}`}>{futureAnswer || '(empty)'}</span>
+                            Your present: <span className={`font-bold ${isPresentCorrect ? 'text-success' : ''}`}>{presentAnswer || '(empty)'}</span>
                           </p>
                           <p className="text-lg" dir="rtl">
-                            Correct future: <span className="font-bold text-success">{currentVerb.future}</span>
+                            Correct present: <span className="font-bold text-success">{currentVerb.present}</span>
                           </p>
                         </div>
                         {currentVerbStats && (

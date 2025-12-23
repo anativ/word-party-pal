@@ -15,7 +15,7 @@ interface Verb {
   id: string;
   hebrew: string;
   past: string;
-  future: string;
+  present: string;
   created_at: string;
 }
 
@@ -23,7 +23,7 @@ export const VerbsAdminPanel = () => {
   const [verbs, setVerbs] = useState<Verb[]>([]);
   const [hebrew, setHebrew] = useState("");
   const [past, setPast] = useState("");
-  const [future, setFuture] = useState("");
+  const [present, setPresent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [bulkJsonData, setBulkJsonData] = useState("");
@@ -35,9 +35,9 @@ export const VerbsAdminPanel = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHebrew, setEditHebrew] = useState("");
   const [editPast, setEditPast] = useState("");
-  const [editFuture, setEditFuture] = useState("");
+  const [editPresent, setEditPresent] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
-  const [sortColumn, setSortColumn] = useState<"hebrew" | "past" | "future" | null>(null);
+  const [sortColumn, setSortColumn] = useState<"hebrew" | "past" | "present" | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export const VerbsAdminPanel = () => {
   };
 
   const handleAddVerb = async () => {
-    if (!hebrew.trim() || !past.trim() || !future.trim()) {
+    if (!hebrew.trim() || !past.trim() || !present.trim()) {
       toast.error("All fields are required");
       return;
     }
@@ -69,14 +69,14 @@ export const VerbsAdminPanel = () => {
     try {
       const { error } = await supabase
         .from("verbs")
-        .insert([{ hebrew: hebrew.trim(), past: past.trim(), future: future.trim() }]);
+        .insert([{ hebrew: hebrew.trim(), past: past.trim(), present: present.trim() }]);
 
       if (error) throw error;
 
       toast.success("Verb added successfully! 🎉");
       setHebrew("");
       setPast("");
-      setFuture("");
+      setPresent("");
       fetchVerbs();
     } catch (error) {
       console.error("Error adding verb:", error);
@@ -121,14 +121,14 @@ export const VerbsAdminPanel = () => {
       }
 
       const validVerbs = parsed.filter(item => {
-        if (typeof item !== 'object' || !item.hebrew || !item.past || !item.future) {
+        if (typeof item !== 'object' || !item.hebrew || !item.past || !item.present) {
           return false;
         }
         return true;
       });
 
       if (validVerbs.length === 0) {
-        throw new Error("No valid verbs found. Each verb must have 'hebrew', 'past', and 'future' fields");
+        throw new Error("No valid verbs found. Each verb must have 'hebrew', 'past', and 'present' fields");
       }
 
       const { error } = await supabase
@@ -136,7 +136,7 @@ export const VerbsAdminPanel = () => {
         .insert(validVerbs.map(v => ({
           hebrew: v.hebrew.trim(),
           past: v.past.trim(),
-          future: v.future.trim()
+          present: v.present.trim()
         })));
 
       if (error) throw error;
@@ -181,18 +181,18 @@ export const VerbsAdminPanel = () => {
     setEditingId(verb.id);
     setEditHebrew(verb.hebrew);
     setEditPast(verb.past);
-    setEditFuture(verb.future);
+    setEditPresent(verb.present);
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditHebrew("");
     setEditPast("");
-    setEditFuture("");
+    setEditPresent("");
   };
 
   const handleSaveEdit = async (id: string) => {
-    if (!editHebrew.trim() || !editPast.trim() || !editFuture.trim()) {
+    if (!editHebrew.trim() || !editPast.trim() || !editPresent.trim()) {
       toast.error("All fields are required");
       return;
     }
@@ -204,7 +204,7 @@ export const VerbsAdminPanel = () => {
         .update({ 
           hebrew: editHebrew.trim(), 
           past: editPast.trim(), 
-          future: editFuture.trim() 
+          present: editPresent.trim() 
         })
         .eq("id", id);
 
@@ -214,7 +214,7 @@ export const VerbsAdminPanel = () => {
       setEditingId(null);
       setEditHebrew("");
       setEditPast("");
-      setEditFuture("");
+      setEditPresent("");
       fetchVerbs();
     } catch (error) {
       console.error("Error updating verb:", error);
@@ -242,7 +242,7 @@ export const VerbsAdminPanel = () => {
     }
   };
 
-  const handleSort = (column: "hebrew" | "past" | "future") => {
+  const handleSort = (column: "hebrew" | "past" | "present") => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -259,7 +259,7 @@ export const VerbsAdminPanel = () => {
     return sortDirection === "asc" ? comparison : -comparison;
   });
 
-  const SortIcon = ({ column }: { column: "hebrew" | "past" | "future" }) => {
+  const SortIcon = ({ column }: { column: "hebrew" | "past" | "present" }) => {
     if (sortColumn !== column) return <ArrowUpDown className="ml-1 h-4 w-4 inline" />;
     return sortDirection === "asc" 
       ? <ArrowUp className="ml-1 h-4 w-4 inline" /> 
@@ -284,7 +284,7 @@ export const VerbsAdminPanel = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Hebrew (Present)</label>
+                <label className="text-sm font-medium">Hebrew (Infinitive)</label>
                 <Input
                   value={hebrew}
                   onChange={(e) => setHebrew(e.target.value)}
@@ -304,11 +304,11 @@ export const VerbsAdminPanel = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Future</label>
+                <label className="text-sm font-medium">Present</label>
                 <Input
-                  value={future}
-                  onChange={(e) => setFuture(e.target.value)}
-                  placeholder="e.g., אֵלֵךְ"
+                  value={present}
+                  onChange={(e) => setPresent(e.target.value)}
+                  placeholder="e.g., הוֹלֵךְ"
                   className="text-lg"
                   dir="rtl"
                 />
@@ -334,7 +334,7 @@ export const VerbsAdminPanel = () => {
           <DialogHeader>
             <DialogTitle>Bulk Upload Verbs</DialogTitle>
             <DialogDescription>
-              Paste your JSON data below. The format should be an array of objects with 'hebrew', 'past', and 'future' fields.
+              Paste your JSON data below. The format should be an array of objects with 'hebrew', 'past', and 'present' fields.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -343,7 +343,7 @@ export const VerbsAdminPanel = () => {
               <Textarea
                 value={bulkJsonData}
                 onChange={(e) => setBulkJsonData(e.target.value)}
-                placeholder={`[\n  { "hebrew": "לָלֶכֶת", "past": "הָלַכְתִּי", "future": "אֵלֵךְ" },\n  { "hebrew": "לֶאֱכֹל", "past": "אָכַלְתִּי", "future": "אֹכַל" }\n]`}
+                placeholder={`[\n  { "hebrew": "לָלֶכֶת", "past": "הָלַכְתִּי", "present": "הוֹלֵךְ" },\n  { "hebrew": "לֶאֱכֹל", "past": "אָכַלְתִּי", "present": "אוֹכֵל" }\n]`}
                 className="font-mono text-sm min-h-[300px]"
                 dir="rtl"
               />
@@ -352,8 +352,8 @@ export const VerbsAdminPanel = () => {
               <p className="font-semibold mb-2">Example format:</p>
               <pre className="text-xs overflow-x-auto" dir="rtl">
 {`[
-  { "hebrew": "לָלֶכֶת", "past": "הָלַכְתִּי", "future": "אֵלֵךְ" },
-  { "hebrew": "לֶאֱכֹל", "past": "אָכַלְתִּי", "future": "אֹכַל" }
+  { "hebrew": "לָלֶכֶת", "past": "הָלַכְתִּי", "present": "הוֹלֵךְ" },
+  { "hebrew": "לֶאֱכֹל", "past": "אָכַלְתִּי", "present": "אוֹכֵל" }
 ]`}
               </pre>
             </div>
@@ -488,9 +488,9 @@ export const VerbsAdminPanel = () => {
                     </TableHead>
                     <TableHead 
                       className="w-[25%] cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort("future")}
+                      onClick={() => handleSort("present")}
                     >
-                      Future <SortIcon column="future" />
+                      Present <SortIcon column="present" />
                     </TableHead>
                     <TableHead className="w-[25%] text-right">Action</TableHead>
                   </TableRow>
@@ -525,13 +525,13 @@ export const VerbsAdminPanel = () => {
                       <TableCell dir="rtl">
                         {editingId === verb.id ? (
                           <Input
-                            value={editFuture}
-                            onChange={(e) => setEditFuture(e.target.value)}
+                            value={editPresent}
+                            onChange={(e) => setEditPresent(e.target.value)}
                             dir="rtl"
                             className="h-8"
                           />
                         ) : (
-                          verb.future
+                          verb.present
                         )}
                       </TableCell>
                       <TableCell className="text-right">
