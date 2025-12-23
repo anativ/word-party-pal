@@ -2,15 +2,20 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { QuizGame } from "@/components/QuizGame";
+import { VerbQuizGame } from "@/components/VerbQuizGame";
 import { AdminPanel } from "@/components/AdminPanel";
+import { VerbsAdminPanel } from "@/components/VerbsAdminPanel";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
 import { MobileNav } from "@/components/MobileNav";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Shield, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Index = () => {
   const [mode, setMode] = useState<"quiz" | "admin">("quiz");
+  const [practiceMode, setPracticeMode] = useState<"vocabulary" | "verbs">("vocabulary");
+  const [adminTab, setAdminTab] = useState<"words" | "verbs">("words");
   const [userName, setUserName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
@@ -141,7 +146,37 @@ const Index = () => {
           </Button>
         </div>
 
-        {mode === "quiz" ? <QuizGame /> : <AdminPanel />}
+        {mode === "quiz" ? (
+          <div className="space-y-6">
+            <Tabs value={practiceMode} onValueChange={(v) => setPracticeMode(v as "vocabulary" | "verbs")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="vocabulary">Vocabulary</TabsTrigger>
+                <TabsTrigger value="verbs">Verb Conjugation</TabsTrigger>
+              </TabsList>
+              <TabsContent value="vocabulary" className="mt-4">
+                <QuizGame />
+              </TabsContent>
+              <TabsContent value="verbs" className="mt-4">
+                <VerbQuizGame />
+              </TabsContent>
+            </Tabs>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <Tabs value={adminTab} onValueChange={(v) => setAdminTab(v as "words" | "verbs")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="words">Words</TabsTrigger>
+                <TabsTrigger value="verbs">Verbs</TabsTrigger>
+              </TabsList>
+              <TabsContent value="words" className="mt-4">
+                <AdminPanel />
+              </TabsContent>
+              <TabsContent value="verbs" className="mt-4">
+                <VerbsAdminPanel />
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
 
         <AdminPasswordDialog
           open={showAdminDialog}
