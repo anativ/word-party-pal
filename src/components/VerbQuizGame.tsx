@@ -339,6 +339,10 @@ export const VerbQuizGame = () => {
                       className="text-lg text-center"
                       dir="rtl"
                       autoFocus
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
                     />
                   </div>
                   <div className="space-y-2">
@@ -350,6 +354,10 @@ export const VerbQuizGame = () => {
                       placeholder="Type past tense..."
                       className="text-lg text-center"
                       dir="rtl"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
                     />
                   </div>
                 </div>
