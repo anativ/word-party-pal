@@ -331,23 +331,23 @@ export const VerbQuizGame = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-center block">Past (עבר)</label>
+                    <label className="text-sm font-medium text-center block">Present (הווה)</label>
                     <Input
-                      value={pastAnswer}
-                      onChange={(e) => setPastAnswer(e.target.value)}
-                      placeholder="Type past tense..."
+                      value={presentAnswer}
+                      onChange={(e) => setPresentAnswer(e.target.value)}
+                      placeholder="Type present tense..."
                       className="text-lg text-center"
                       dir="rtl"
                       autoFocus
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-center block">Present (הווה)</label>
+                    <label className="text-sm font-medium text-center block">Past (עבר)</label>
                     <Input
-                      value={presentAnswer}
-                      onChange={(e) => setPresentAnswer(e.target.value)}
+                      value={pastAnswer}
+                      onChange={(e) => setPastAnswer(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                      placeholder="Type present tense..."
+                      placeholder="Type past tense..."
                       className="text-lg text-center"
                       dir="rtl"
                     />

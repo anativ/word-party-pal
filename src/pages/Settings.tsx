@@ -18,10 +18,12 @@ const Settings = () => {
   const [wordOrder, setWordOrder] = useState("random_priority_least_seen");
   const [userId, setUserId] = useState<string | null>(null);
   const [skippedWords, setSkippedWords] = useState<Array<{ id: string; word_id: string; english: string; hebrew: string }>>([]);
+  const [skippedVerbs, setSkippedVerbs] = useState<Array<{ id: string; verb_id: string; hebrew: string; past: string; present: string }>>([]);
 
   useEffect(() => {
     loadSettings();
     loadSkippedWords();
+    loadSkippedVerbs();
   }, []);
 
   const loadSettings = async () => {
@@ -82,6 +84,40 @@ const Settings = () => {
       }
     } catch (error) {
       console.error("Error loading skipped words:", error);
+    }
+  };
+
+  const loadSkippedVerbs = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: stats } = await supabase
+        .from("verb_stats")
+        .select(`
+          id,
+          verb_id,
+          verbs:verb_id (
+            hebrew,
+            past,
+            present
+          )
+        `)
+        .eq("user_id", user.id)
+        .eq("skipped", true);
+
+      if (stats) {
+        const formattedVerbs = stats.map((stat: any) => ({
+          id: stat.id,
+          verb_id: stat.verb_id,
+          hebrew: stat.verbs.hebrew,
+          past: stat.verbs.past,
+          present: stat.verbs.present,
+        }));
+        setSkippedVerbs(formattedVerbs);
+      }
+    } catch (error) {
+      console.error("Error loading skipped verbs:", error);
     }
   };
 
@@ -207,6 +243,55 @@ const Settings = () => {
     }
   };
 
+  const handleUnskipVerb = async (statsId: string) => {
+    try {
+      await supabase
+        .from("verb_stats")
+        .update({ skipped: false })
+        .eq("id", statsId);
+
+      toast({
+        title: "Verb unskipped",
+        description: "Verb will appear in practice again",
+      });
+
+      loadSkippedVerbs();
+    } catch (error) {
+      console.error("Error unskipping verb:", error);
+      toast({
+        title: "Error",
+        description: "Failed to unskip verb",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClearAllSkippedVerbs = async () => {
+    if (!userId) return;
+
+    try {
+      await supabase
+        .from("verb_stats")
+        .update({ skipped: false })
+        .eq("user_id", userId)
+        .eq("skipped", true);
+
+      toast({
+        title: "All verbs unskipped",
+        description: "All verbs will appear in practice again",
+      });
+
+      loadSkippedVerbs();
+    } catch (error) {
+      console.error("Error clearing skipped verbs:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear skipped verbs",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   if (loading) {
     return (
@@ -327,6 +412,56 @@ const Settings = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleUnskipWord(word.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Skipped Verbs</CardTitle>
+                  <CardDescription>Verbs you've chosen to skip forever</CardDescription>
+                </div>
+                {skippedVerbs.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearAllSkippedVerbs}
+                  >
+                    Clear All
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {skippedVerbs.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No verbs skipped yet
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {skippedVerbs.map((verb) => (
+                    <div
+                      key={verb.id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium" dir="rtl">{verb.hebrew}</div>
+                        <div className="text-sm text-muted-foreground" dir="rtl">
+                          {verb.present} / {verb.past}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleUnskipVerb(verb.id)}
                       >
                         <X className="h-4 w-4" />
                       </Button>
