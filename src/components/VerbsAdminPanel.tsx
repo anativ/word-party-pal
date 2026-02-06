@@ -343,7 +343,7 @@ export const VerbsAdminPanel = () => {
               <Textarea
                 value={bulkJsonData}
                 onChange={(e) => setBulkJsonData(e.target.value)}
-                placeholder={`[\n  { "hebrew": "לָלֶכֶת", "past": "הָלַכְתִּי", "present": "הוֹלֵךְ" },\n  { "hebrew": "לֶאֱכֹל", "past": "אָכַלְתִּי", "present": "אוֹכֵל" }\n]`}
+                placeholder={`[\n  { "hebrew": "לָלֶכֶת", "past": "past", "present": "present" },\n  { "hebrew": "לֶאֱכֹל", "past": "past", "present": "present" }\n]`}
                 className="font-mono text-sm min-h-[300px]"
                 dir="rtl"
               />
@@ -352,8 +352,8 @@ export const VerbsAdminPanel = () => {
               <p className="font-semibold mb-2">Example format:</p>
               <pre className="text-xs overflow-x-auto" dir="rtl">
 {`[
-  { "hebrew": "לָלֶכֶת", "past": "הָלַכְתִּי", "present": "הוֹלֵךְ" },
-  { "hebrew": "לֶאֱכֹל", "past": "אָכַלְתִּי", "present": "אוֹכֵל" }
+  { "hebrew": "לָלֶכֶת", "past": "past", "present": "present" },
+  { "hebrew": "לֶאֱכֹל", "past": "past", "present": "present" }
 ]`}
               </pre>
             </div>
