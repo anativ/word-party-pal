@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { X, Plus, Loader2, Upload, Trash2, Pencil, Check, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ApiKeyCard } from "@/components/ApiKeyCard";
 import { ApiUsageGuide } from "@/components/ApiUsageGuide";
 
 interface Word {
@@ -261,7 +260,6 @@ export const AdminPanel = () => {
 
   return (
     <div className="space-y-6">
-      <ApiKeyCard />
       <ApiUsageGuide />
       <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
         <Card className="shadow-lg">

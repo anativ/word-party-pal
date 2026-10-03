@@ -2,13 +2,11 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { z } from 'npm:zod@3'
 
-// External admin API for managing words and verbs.
-// Auth: every request must send header `x-api-key` matching the
-// WORDS_ADMIN_API_KEY secret. Without it, all requests are rejected.
+// External API for managing words and verbs.
+// Fully public — no API key required. Be nice. :)
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-const API_KEY = Deno.env.get('WORDS_ADMIN_API_KEY')
 
 const wordSchema = z.object({
   id: z.string().uuid().optional(),
@@ -47,15 +45,6 @@ Deno.serve(async (req) => {
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     return json({ error: 'Server is not configured (missing database credentials).' }, 500)
-  }
-
-  // --- API key check ---
-  const providedKey = req.headers.get('x-api-key')
-  if (!API_KEY) {
-    return json({ error: 'Server is not configured (missing API key). Set the WORDS_ADMIN_API_KEY secret first.' }, 500)
-  }
-  if (!providedKey || providedKey !== API_KEY) {
-    return json({ error: 'Invalid or missing API key. Send it in the `x-api-key` header.' }, 401)
   }
 
   // --- Body validation ---
