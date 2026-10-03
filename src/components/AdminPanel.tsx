@@ -11,6 +11,7 @@ import { X, Plus, Loader2, Upload, Trash2, Pencil, Check, ArrowUpDown, ArrowUp, 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ApiKeyCard } from "@/components/ApiKeyCard";
+import { ApiUsageGuide } from "@/components/ApiUsageGuide";
 
 interface Word {
   id: string;
