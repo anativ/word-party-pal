@@ -78,7 +78,7 @@ export const ApiUsageGuide = () => {
           </div>
 
           <div className="space-y-1">
-            <p className="font-semibold">4. What each action does</p>
+            <p className="font-semibold">3. What each action does</p>
             <ul className="list-disc space-y-1 pr-5 text-muted-foreground">
               <li><strong className="text-foreground">insert</strong> — adds new items (no <code>id</code> needed).</li>
               <li><strong className="text-foreground">update</strong> — every item must include its <code>id</code>.</li>
@@ -88,11 +88,10 @@ export const ApiUsageGuide = () => {
           </div>
 
           <div className="space-y-1">
-            <p className="font-semibold">5. Example: add words</p>
+            <p className="font-semibold">4. Example: add words</p>
             <CodeBlock
               code={`curl -X POST '${ENDPOINT.split(" ").pop()}' \\
   -H 'Content-Type: application/json' \\
-  -H 'x-api-key: YOUR_KEY' \\
   -d '{
     "table": "words",
     "action": "insert",
@@ -105,11 +104,10 @@ export const ApiUsageGuide = () => {
           </div>
 
           <div className="space-y-1">
-            <p className="font-semibold">6. Example: bulk sync verbs</p>
+            <p className="font-semibold">5. Example: bulk sync verbs</p>
             <CodeBlock
               code={`curl -X POST '${ENDPOINT.split(" ").pop()}' \\
   -H 'Content-Type: application/json' \\
-  -H 'x-api-key: YOUR_KEY' \\
   -d '{
     "table": "verbs",
     "action": "upsert",
@@ -121,13 +119,13 @@ export const ApiUsageGuide = () => {
           </div>
 
           <div className="space-y-1">
-            <p className="font-semibold">7. Responses</p>
+            <p className="font-semibold">6. Responses</p>
             <p className="text-muted-foreground">
               Success returns a count of what changed:
             </p>
             <CodeBlock code={`{ "table": "words", "action": "insert", "inserted": 2, "updated": 0 }`} />
             <p className="text-muted-foreground mt-2">
-              Errors: <code>401</code> wrong key · <code>400</code> bad JSON · <code>405</code> not POST · <code>500</code> server issue.
+              Errors: <code>400</code> bad JSON · <code>405</code> not POST · <code>500</code> server issue.
             </p>
           </div>
         </CardContent>
