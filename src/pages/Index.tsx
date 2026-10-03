@@ -7,6 +7,7 @@ import { AdminPanel } from "@/components/AdminPanel";
 import { VerbsAdminPanel } from "@/components/VerbsAdminPanel";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
 import { MobileNav } from "@/components/MobileNav";
+import { LiveBroadcast } from "@/components/LiveBroadcast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Shield, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,6 +178,8 @@ const Index = () => {
             </Tabs>
           </div>
         )}
+
+        <LiveBroadcast userName={userName} />
 
         <AdminPasswordDialog
           open={showAdminDialog}
