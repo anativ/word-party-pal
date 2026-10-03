@@ -262,6 +262,7 @@ export const AdminPanel = () => {
   return (
     <div className="space-y-6">
       <ApiKeyCard />
+      <ApiUsageGuide />
       <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
         <Card className="shadow-lg">
           <CardHeader>
