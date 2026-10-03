@@ -43,6 +43,12 @@ export const ApiUsageGuide = () => {
       </CardHeader>
       {isOpen && (
         <CardContent className="space-y-5 text-sm">
+          <div className="rounded-md bg-primary/10 p-3 text-muted-foreground">
+            This API is <strong className="text-foreground">100% open</strong> — no key, no signup,
+            no strings attached. Free as in beer, free as in speech, free as in "please don't
+            delete all our words." With great power comes great vocabulary.
+          </div>
+
           <div className="space-y-1">
             <p className="font-semibold">1. The endpoint</p>
             <p className="text-muted-foreground">
@@ -52,16 +58,7 @@ export const ApiUsageGuide = () => {
           </div>
 
           <div className="space-y-1">
-            <p className="font-semibold">2. Your secret key</p>
-            <p className="text-muted-foreground">
-              Every request must include your API key (shown above) in the{" "}
-              <code>x-api-key</code> header. Requests without it — or with a wrong key —
-              are rejected with <code>401 Unauthorized</code>.
-            </p>
-          </div>
-
-          <div className="space-y-1">
-            <p className="font-semibold">3. The request body</p>
+            <p className="font-semibold">2. The request body</p>
             <p className="text-muted-foreground">Send a JSON with three fields:</p>
             <CodeBlock
               code={`{
