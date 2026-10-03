@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { QuizGame } from "@/components/QuizGame";
 import { VerbQuizGame } from "@/components/VerbQuizGame";
+import { SentenceGame } from "@/components/SentenceGame";
 import { AdminPanel } from "@/components/AdminPanel";
 import { VerbsAdminPanel } from "@/components/VerbsAdminPanel";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
@@ -15,7 +16,7 @@ import { toast } from "sonner";
 
 const Index = () => {
   const [mode, setMode] = useState<"quiz" | "admin">("quiz");
-  const [practiceMode, setPracticeMode] = useState<"vocabulary" | "verbs">("vocabulary");
+  const [practiceMode, setPracticeMode] = useState<"vocabulary" | "verbs" | "sentences">("vocabulary");
   const [adminTab, setAdminTab] = useState<"words" | "verbs">("words");
   const [userName, setUserName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -149,16 +150,20 @@ const Index = () => {
 
         {mode === "quiz" ? (
           <div className="space-y-6">
-            <Tabs value={practiceMode} onValueChange={(v) => setPracticeMode(v as "vocabulary" | "verbs")} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs value={practiceMode} onValueChange={(v) => setPracticeMode(v as "vocabulary" | "verbs" | "sentences")} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="vocabulary">Vocabulary</TabsTrigger>
                 <TabsTrigger value="verbs">Verb Conjugation</TabsTrigger>
+                <TabsTrigger value="sentences">Sentences</TabsTrigger>
               </TabsList>
               <TabsContent value="vocabulary" className="mt-4">
                 <QuizGame />
               </TabsContent>
               <TabsContent value="verbs" className="mt-4">
                 <VerbQuizGame />
+              </TabsContent>
+              <TabsContent value="sentences" className="mt-4">
+                <SentenceGame />
               </TabsContent>
             </Tabs>
           </div>
